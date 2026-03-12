@@ -1,15 +1,8 @@
-# DelphiCDK
-Delphi app CDK resources
+# Welcome to your CDK TypeScript project
 
-This is a TypeScript CDK project for deploying Delphi application resources on AWS.
+This is a blank project for CDK development with TypeScript.
 
 The `cdk.json` file tells the CDK Toolkit how to execute your app.
-
-## Project Structure
-
-* `bin/delphi-cdk.ts` — App entry point; instantiates the stacks
-* `lib/sample-stack.ts` — `SampleStack` placeholder; replace with your Delphi resource stacks
-* `test/` — Jest unit tests for your CDK stacks
 
 ## Useful commands
 
