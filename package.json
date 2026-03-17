@@ -2,7 +2,7 @@
   "name": "delphi_cdk",
   "version": "0.1.0",
   "bin": {
-    "delphi_cdk": "bin/delphi_cdk.js"
+    "delphi_analysis": "build/lib/app.js"
   },
   "scripts": {
     "build": "tsc",

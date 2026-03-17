@@ -23,7 +23,9 @@
     "skipLibCheck": true,
     "typeRoots": [
       "./node_modules/@types"
-    ]
+    ],
+    "types": ["node"],
+    "outDir": "./build"
   },
   "exclude": [
     "node_modules",
