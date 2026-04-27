@@ -5,9 +5,6 @@
 /** Environment name */
 export const ENVIRONMENT_NAME = 'prod';
 
-/** ECR repository name */
-export const ECR_REPOSITORY_NAME = 'delphi-kalshi';
-
 /** AppConfig application name */
 export const APP_CONFIG_APPLICATION_NAME = 'DelphiConfig';
 

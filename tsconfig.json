@@ -20,15 +20,17 @@
     "inlineSources": true,
     "experimentalDecorators": true,
     "strictPropertyInitialization": false,
+    "isolatedModules": true,
     "skipLibCheck": true,
     "typeRoots": [
       "./node_modules/@types"
     ],
-    "types": ["node"],
+    "types": ["node", "jest"],
     "outDir": "./build"
   },
   "exclude": [
     "node_modules",
-    "cdk.out"
+    "cdk.out",
+    "build"
   ]
 }
