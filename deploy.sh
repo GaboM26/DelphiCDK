@@ -161,28 +161,37 @@ if [[ "$SKIP_BOOTSTRAP" -eq 0 ]]; then
   npx cdk bootstrap "aws://$AWS_ACCOUNT_ID/$AWS_REGION"
 fi
 
-echo "==> Deploying stacks"
-CDK_DEPLOY_CMD=(
+export DELPHI_LOAD_DOTENV=1
+
+BASE_CDK_DEPLOY_CMD=(
   npx cdk deploy
-  DelphiAppConfigStack
-  DelphiLambdaStack
   --require-approval "$REQUIRE_APPROVAL"
 )
 
 if [[ -n "$STRATEGY_NAME" ]]; then
-  CDK_DEPLOY_CMD+=(-c "strategy=$STRATEGY_NAME")
+  BASE_CDK_DEPLOY_CMD+=(-c "strategy=$STRATEGY_NAME")
 fi
 
 if [[ -n "$SCHEDULE_MINUTES" ]]; then
-  CDK_DEPLOY_CMD+=(-c "scheduleMinutes=$SCHEDULE_MINUTES")
+  BASE_CDK_DEPLOY_CMD+=(-c "scheduleMinutes=$SCHEDULE_MINUTES")
 fi
 
 if [[ "$SCHEDULE_ENABLED" -eq 0 ]]; then
-  CDK_DEPLOY_CMD+=(-c "scheduleEnabled=false")
+  BASE_CDK_DEPLOY_CMD+=(-c "scheduleEnabled=false")
 fi
 
 if [[ ${#DEPLOYMENT_ARGS[@]} -gt 0 ]]; then
-  CDK_DEPLOY_CMD+=("${DEPLOYMENT_ARGS[@]}")
+  BASE_CDK_DEPLOY_CMD+=("${DEPLOYMENT_ARGS[@]}")
 fi
 
-"${CDK_DEPLOY_CMD[@]}"
+echo "==> Deploying secrets stack"
+"${BASE_CDK_DEPLOY_CMD[@]}" DelphiSecretsStack
+
+echo "==> Syncing Kalshi runtime secrets"
+SECRET_EXPORTS="$(npx ts-node scripts/sync-kalshi-secrets.ts)"
+if [[ -n "$SECRET_EXPORTS" ]]; then
+  eval "$SECRET_EXPORTS"
+fi
+
+echo "==> Deploying AppConfig and Lambda stacks"
+"${BASE_CDK_DEPLOY_CMD[@]}" DelphiAppConfigStack DelphiLambdaStack

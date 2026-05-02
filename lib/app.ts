@@ -3,6 +3,7 @@ import 'source-map-support/register';
 import { App } from 'aws-cdk-lib';
 import { AppConfigStack } from './stacks/app-config-stack';
 import { LambdaStack } from './stacks/lambda-stack';
+import { SecretsStack } from './stacks/secrets-stack';
 import { STRATEGY_DEFAULT_NAME, SCHEDULE_DEFAULT_INTERVAL_MINUTES } from './config/constants';
 
 function parseBooleanContext(value: unknown, defaultValue: boolean): boolean {
@@ -35,6 +36,10 @@ const strategyName = app.node.tryGetContext('strategy') ?? STRATEGY_DEFAULT_NAME
 const scheduleMinutes = Number(app.node.tryGetContext('scheduleMinutes') ?? SCHEDULE_DEFAULT_INTERVAL_MINUTES);
 const scheduleEnabled = parseBooleanContext(app.node.tryGetContext('scheduleEnabled'), true);
 
+const secretsStack = new SecretsStack(app, 'DelphiSecretsStack', {
+  env,
+});
+
 const appConfigStack = new AppConfigStack(app, 'DelphiAppConfigStack', {
   env,
 });
@@ -46,4 +51,5 @@ new LambdaStack(app, 'DelphiLambdaStack', {
   scheduleMinutes,
   scheduleEnabled,
   appConfigStack,
+  secretsStack,
 });

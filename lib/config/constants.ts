@@ -19,3 +19,9 @@ export const STRATEGY_DEFAULT_NAME = 'time-event-comparison';
 
 /** Default EventBridge schedule interval in minutes */
 export const SCHEDULE_DEFAULT_INTERVAL_MINUTES = 15;
+
+/** Default AWS Secrets Manager name for production Kalshi credentials */
+export const PROD_KALSHI_SECRET_NAME = 'delphi/kalshi/prod';
+
+/** Default AWS Secrets Manager name for demo Kalshi credentials */
+export const DEMO_KALSHI_SECRET_NAME = 'delphi/kalshi/demo';

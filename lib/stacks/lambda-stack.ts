@@ -1,17 +1,16 @@
-import { basename, resolve } from 'node:path';
 import { Duration, Stack, type StackProps } from 'aws-cdk-lib';
 import { DockerImageCode, DockerImageFunction } from 'aws-cdk-lib/aws-lambda';
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { Rule, RuleTargetInput, Schedule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction as LambdaTarget } from 'aws-cdk-lib/aws-events-targets';
+import { resolve } from 'node:path';
 import { Construct } from 'constructs';
 import { AppConfigStack } from './app-config-stack';
+import { SecretsStack } from './secrets-stack';
+import { getSourceRootFromCdkDir, resolveLambdaRuntimeConfig } from '../config/runtime-env';
 import { LAMBDA_FUNCTION_NAME, LAMBDA_MEMORY_MB, LAMBDA_TIMEOUT_SEC } from '../config/lambda-config';
 
-const CDK_ROOT_OR_BUILD_DIR = resolve(__dirname, '..', '..');
-const SOURCE_ROOT = basename(CDK_ROOT_OR_BUILD_DIR) === 'build'
-  ? resolve(CDK_ROOT_OR_BUILD_DIR, '..', '..')
-  : resolve(CDK_ROOT_OR_BUILD_DIR, '..');
+const SOURCE_ROOT = getSourceRootFromCdkDir(resolve(__dirname, '..', '..'));
 const DOCKER_ASSET_EXCLUDES = [
   'Delphi/.git',
   'Delphi/.venv',
@@ -35,6 +34,8 @@ export interface LambdaStackProps extends StackProps {
   scheduleEnabled: boolean;
   /** AppConfig stack whose IDs are injected into the Lambda as env vars. */
   appConfigStack?: AppConfigStack;
+  /** Secrets stack whose secret names are injected into the Lambda as env vars. */
+  secretsStack: SecretsStack;
 }
 
 export class LambdaStack extends Stack {
@@ -48,7 +49,9 @@ export class LambdaStack extends Stack {
       scheduleMinutes,
       scheduleEnabled,
       appConfigStack,
+      secretsStack,
     } = props;
+    const { lambdaEnvironment: runtimeEnvironment } = resolveLambdaRuntimeConfig(SOURCE_ROOT);
 
     const appConfigEnv = appConfigStack
       ? {
@@ -57,6 +60,10 @@ export class LambdaStack extends Stack {
           APPCONFIG_TICKERS_PROFILE_ID: appConfigStack.tickersProfileId,
         }
       : undefined;
+    const secretEnvironment: Record<string, string> = {
+      KALSHI_SECRET_NAME: secretsStack.prodSecret.secretName,
+      KALSHI_DEMO_SECRET_NAME: secretsStack.demoSecret.secretName,
+    };
 
     this.analysisFunction = new DockerImageFunction(this, 'AnalysisFunction', {
       functionName: LAMBDA_FUNCTION_NAME,
@@ -67,8 +74,14 @@ export class LambdaStack extends Stack {
       memorySize: LAMBDA_MEMORY_MB,
       timeout: Duration.seconds(LAMBDA_TIMEOUT_SEC),
       description: `Delphi Kalshi analysis — strategy: ${strategyName}`,
-      environment: appConfigEnv,
+      environment: {
+        ...runtimeEnvironment,
+        ...secretEnvironment,
+        ...(appConfigEnv ?? {}),
+      },
     });
+    secretsStack.prodSecret.grantRead(this.analysisFunction);
+    secretsStack.demoSecret.grantRead(this.analysisFunction);
 
     if (appConfigStack) {
       this.analysisFunction.addToRolePolicy(new PolicyStatement({
