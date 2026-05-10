@@ -12,6 +12,7 @@ AWS_PROFILE_NAME="${AWS_PROFILE:-}"
 STRATEGY_NAME=""
 SCHEDULE_MINUTES=""
 SCHEDULE_ENABLED=1
+LAMBDA_ONLY=0
 SKIP_BOOTSTRAP=0
 SKIP_INSTALL=0
 REQUIRE_APPROVAL="broadening"
@@ -30,6 +31,7 @@ Options:
   --strategy NAME           CDK context override for the Lambda strategy
   --schedule-minutes N      CDK context override for the EventBridge schedule
   --disable-schedule        Deploy the Lambda without creating the EventBridge schedule
+  --lambda-only             Deploy only DelphiLambdaStack
   --skip-bootstrap          Skip `cdk bootstrap`
   --skip-install            Skip `npm install`
   --require-approval MODE   CDK approval mode (default: broadening)
@@ -40,6 +42,7 @@ Examples:
   ./deploy.sh --account 123456789012 --region us-east-1
   ./deploy.sh --strategy yes-no-arbitrage --schedule-minutes 15
   ./deploy.sh --disable-schedule
+  ./deploy.sh --lambda-only --skip-bootstrap
   ./deploy.sh --skip-bootstrap -- --verbose
 EOF
 }
@@ -76,6 +79,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --disable-schedule)
       SCHEDULE_ENABLED=0
+      shift
+      ;;
+    --lambda-only)
+      LAMBDA_ONLY=1
       shift
       ;;
     --skip-bootstrap)
@@ -147,6 +154,9 @@ fi
 if [[ "$SCHEDULE_ENABLED" -eq 0 ]]; then
   echo "    schedule: disabled"
 fi
+if [[ "$LAMBDA_ONLY" -eq 1 ]]; then
+  echo "    deployment mode: lambda-only"
+fi
 
 if [[ "$SKIP_INSTALL" -eq 0 ]]; then
   echo "==> Installing CDK dependencies"
@@ -182,6 +192,12 @@ fi
 
 if [[ ${#DEPLOYMENT_ARGS[@]} -gt 0 ]]; then
   BASE_CDK_DEPLOY_CMD+=("${DEPLOYMENT_ARGS[@]}")
+fi
+
+if [[ "$LAMBDA_ONLY" -eq 1 ]]; then
+  echo "==> Deploying Lambda stack only"
+  "${BASE_CDK_DEPLOY_CMD[@]}" DelphiLambdaStack
+  exit 0
 fi
 
 echo "==> Deploying secrets stack"

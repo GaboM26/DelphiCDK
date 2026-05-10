@@ -41,8 +41,11 @@ The script runs `npm install`, `npm run build`, `cdk bootstrap`, deploys the sec
 ./deploy.sh --account 123456789012 --region us-east-1
 ./deploy.sh --strategy yes-no-arbitrage --schedule-minutes 15
 ./deploy.sh --account 707859599298 --region us-east-1 --disable-schedule
+./deploy.sh --account 707859599298 --region us-east-1 --lambda-only --skip-bootstrap
 ./deploy.sh --skip-bootstrap
 ```
+
+`--lambda-only` skips the secrets stack deploy, secret sync, and AppConfig deploy, and runs only `DelphiLambdaStack`. Use it when those supporting stacks already exist and you only want to push updated Lambda code/config.
 
 ## Useful deploy commands
 
@@ -58,6 +61,9 @@ npx cdk deploy -c strategy=yes-no-arbitrage -c scheduleMinutes=15
 
 # Deploy the Lambda stack without creating the EventBridge schedule
 npx cdk deploy -c scheduleEnabled=false
+
+# Deploy only the Lambda stack through the helper script
+./deploy.sh --lambda-only --skip-bootstrap
 ```
 
 ## Notes
