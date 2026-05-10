@@ -13,7 +13,7 @@ STRATEGY_NAME=""
 SCHEDULE_MINUTES=""
 SCHEDULE_ENABLED=1
 LAMBDA_ONLY=0
-SKIP_BOOTSTRAP=0
+RUN_BOOTSTRAP=0
 SKIP_INSTALL=0
 REQUIRE_APPROVAL="broadening"
 DEPLOYMENT_ARGS=()
@@ -22,28 +22,29 @@ usage() {
   cat <<'EOF'
 Usage: ./deploy.sh [options] [-- <extra cdk deploy args>]
 
-Bootstraps and deploys the Delphi CDK stacks from this package.
+Builds and deploys the Delphi CDK stacks from this package.
 
 Options:
-  --account ID              AWS account ID for bootstrap target
-  --region REGION           AWS region for bootstrap and deploy
+  --account ID              AWS account ID for bootstrap/deploy target
+  --region REGION           AWS region for bootstrap/deploy target
   --profile NAME            AWS CLI profile to use
   --strategy NAME           CDK context override for the Lambda strategy
   --schedule-minutes N      CDK context override for the EventBridge schedule
   --disable-schedule        Deploy the Lambda without creating the EventBridge schedule
+  --bootstrap               Run `cdk bootstrap` before deploy
   --lambda-only             Deploy only DelphiLambdaStack
-  --skip-bootstrap          Skip `cdk bootstrap`
   --skip-install            Skip `npm install`
   --require-approval MODE   CDK approval mode (default: broadening)
   -h, --help                Show this help
 
 Examples:
   ./deploy.sh
+  ./deploy.sh --bootstrap
   ./deploy.sh --account 123456789012 --region us-east-1
   ./deploy.sh --strategy yes-no-arbitrage --schedule-minutes 15
   ./deploy.sh --disable-schedule
-  ./deploy.sh --lambda-only --skip-bootstrap
-  ./deploy.sh --skip-bootstrap -- --verbose
+  ./deploy.sh --lambda-only
+  ./deploy.sh --bootstrap -- --verbose
 EOF
 }
 
@@ -81,12 +82,16 @@ while [[ $# -gt 0 ]]; do
       SCHEDULE_ENABLED=0
       shift
       ;;
+    --bootstrap)
+      RUN_BOOTSTRAP=1
+      shift
+      ;;
     --lambda-only)
       LAMBDA_ONLY=1
       shift
       ;;
     --skip-bootstrap)
-      SKIP_BOOTSTRAP=1
+      echo "Warning: --skip-bootstrap is now the default and no longer needed." >&2
       shift
       ;;
     --skip-install)
@@ -166,7 +171,7 @@ fi
 echo "==> Building CDK app"
 npm run build
 
-if [[ "$SKIP_BOOTSTRAP" -eq 0 ]]; then
+if [[ "$RUN_BOOTSTRAP" -eq 1 ]]; then
   echo "==> Bootstrapping CDK environment"
   npx cdk bootstrap "aws://$AWS_ACCOUNT_ID/$AWS_REGION"
 fi

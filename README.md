@@ -35,14 +35,14 @@ Or run the packaged deploy script:
 ./deploy.sh
 ```
 
-The script runs `npm install`, `npm run build`, `cdk bootstrap`, deploys the secrets stack, syncs Kalshi values into those secrets, then deploys the AppConfig and Lambda stacks. It also supports the same context overrides:
+The script runs `npm install`, `npm run build`, deploys the secrets stack, syncs Kalshi values into those secrets, then deploys the AppConfig and Lambda stacks. Bootstrap is **not** run by default; use `--bootstrap` when deploying into a new account/region or when the CDK toolkit stack needs to be refreshed. It also supports the same context overrides:
 
 ```bash
 ./deploy.sh --account 123456789012 --region us-east-1
+./deploy.sh --bootstrap
 ./deploy.sh --strategy yes-no-arbitrage --schedule-minutes 15
 ./deploy.sh --account 707859599298 --region us-east-1 --disable-schedule
-./deploy.sh --account 707859599298 --region us-east-1 --lambda-only --skip-bootstrap
-./deploy.sh --skip-bootstrap
+./deploy.sh --account 707859599298 --region us-east-1 --lambda-only
 ```
 
 `--lambda-only` skips the secrets stack deploy, secret sync, and AppConfig deploy, and runs only `DelphiLambdaStack`. Use it when those supporting stacks already exist and you only want to push updated Lambda code/config.
@@ -63,7 +63,10 @@ npx cdk deploy -c strategy=yes-no-arbitrage -c scheduleMinutes=15
 npx cdk deploy -c scheduleEnabled=false
 
 # Deploy only the Lambda stack through the helper script
-./deploy.sh --lambda-only --skip-bootstrap
+./deploy.sh --lambda-only
+
+# Bootstrap the target environment explicitly when needed
+./deploy.sh --bootstrap
 ```
 
 ## Notes
